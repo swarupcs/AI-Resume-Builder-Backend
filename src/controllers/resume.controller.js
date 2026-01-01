@@ -143,3 +143,31 @@ export const getPublicResumeById = asyncHandler(async (req, res) => {
     'Public resume fetched successfully'
   ).send(res);
 });
+
+
+export const deleteResume = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { resumeId } = req.params;
+
+  // 1️⃣ Validate inputs
+  if (!userId) {
+    throw new ApiError(401, 'Unauthorized request');
+  }
+
+  if (!resumeId) {
+    throw new ApiError(400, 'Resume ID is required');
+  }
+
+  // 2️⃣ Delete resume with ownership check
+  const deletedResume = await Resume.findOneAndDelete({
+    _id: resumeId,
+    userId,
+  });
+
+  if (!deletedResume) {
+    throw new ApiError(404, 'Resume not found or access denied');
+  }
+
+  // 3️⃣ Send response
+  return new ApiResponse(200, null, 'Resume deleted successfully').send(res);
+});
