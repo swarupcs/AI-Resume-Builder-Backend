@@ -3,13 +3,37 @@ import bcrypt from 'bcryptjs';
 
 const UserSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    emailId: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
+/**
+ * Compare plain password with hashed password
+ */
 UserSchema.methods.comparePassword = function (password) {
   return bcrypt.compareSync(password, this.password);
 };
