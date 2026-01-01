@@ -88,3 +88,32 @@ export const updateResume = asyncHandler(async (req, res) => {
     res
   );
 });
+
+export const getResumeById = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { resumeId } = req.params;
+
+  // 1️⃣ Validate inputs
+  if (!userId) {
+    throw new ApiError(401, 'Unauthorized request');
+  }
+
+  if (!resumeId) {
+    throw new ApiError(400, 'Resume ID is required');
+  }
+
+  // 2️⃣ Fetch resume with ownership check
+  const resume = await Resume.findOne(
+    { _id: resumeId, userId },
+    { __v: 0, createdAt: 0, updatedAt: 0 } // exclude fields cleanly
+  );
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found');
+  }
+
+  // 3️⃣ Send response
+  return new ApiResponse(200, { resume }, 'Resume fetched successfully').send(
+    res
+  );
+});
