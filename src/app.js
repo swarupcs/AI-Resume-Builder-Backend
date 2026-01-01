@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRouter from './routes/auth.routes.js';
+import cookieParser from 'cookie-parser';
 import { globalErrorHandler } from './middlewares/error.middleware.js';
 import apiRouter from './routes/apiRoutes.js';
 
@@ -16,6 +17,7 @@ await connectDB();
 
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.send('Welcome to AI Resume Builder API');
