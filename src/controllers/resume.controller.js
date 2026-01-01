@@ -117,3 +117,29 @@ export const getResumeById = asyncHandler(async (req, res) => {
     res
   );
 });
+
+export const getPublicResumeById = asyncHandler(async (req, res) => {
+  const { resumeId } = req.params;
+
+  // 1️⃣ Validate input
+  if (!resumeId) {
+    throw new ApiError(400, 'Resume ID is required');
+  }
+
+  // 2️⃣ Fetch only public resume
+  const resume = await Resume.findOne(
+    { _id: resumeId, public: true },
+    { __v: 0, createdAt: 0, updatedAt: 0 }
+  );
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found or not public');
+  }
+
+  // 3️⃣ Send response
+  return new ApiResponse(
+    200,
+    { resume },
+    'Public resume fetched successfully'
+  ).send(res);
+});
