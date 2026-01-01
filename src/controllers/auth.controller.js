@@ -45,28 +45,33 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 
-export const loginUser = async (req, res) => {
-    try {
-        const { email, password} = req.body;
+export const loginUser = asyncHandler(async (req, res) => {
+  const { emailId, password } = req.body;
 
-        // check if user exists
-        const user = await User.findOne({email})
-        if(!user){
-            return res.status(400).json({message: 'Invalid email or password'})
-        }
+  // 1️⃣ Validate input
+  if (!emailId || !password) {
+    throw new ApiError(400, 'Email and password are required');
+  }
 
-        // check if password is correct
-        if(!user.comparePassword(password)){
-            return res.status(400).json({message: 'Invalid email or password'})
-        }
+  // 2️⃣ Check if user exists
+  const user = await User.findOne({ emailId });
+  if (!user) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
 
-        // return success message
-         const token = generateToken(user._id)
-         user.password = undefined;
+  // 3️⃣ Verify password
+  const isPasswordValid = user.comparePassword(password);
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
 
-         return res.status(200).json({message: 'Login successful', token, user})
+  // 4️⃣ Generate token & set cookie
+  const token = generateToken(user._id);
+  setAuthCookie(res, token);
 
-    } catch (error) {
-        return res.status(400).json({message: error.message})
-    }
-}
+  // 5️⃣ Remove sensitive data
+  user.password = undefined;
+
+  // 6️⃣ Send response
+  return new ApiResponse(200, { user }, 'Login successful').send(res);
+});
