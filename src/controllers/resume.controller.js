@@ -1,8 +1,8 @@
-import imagekit from "../config/imageKit.js";
-import Resume from "../models/resume.model.js";
-import { ApiError } from "../utils/api-error.js";
-import { ApiResponse } from "../utils/api-response.js";
-import { asyncHandler } from "../utils/async-handler.js";
+import imagekit from '../config/imageKit.js';
+import Resume from '../models/resume.model.js';
+import { ApiError } from '../utils/api-error.js';
+import { ApiResponse } from '../utils/api-response.js';
+import { asyncHandler } from '../utils/async-handler.js';
 import fs from 'fs';
 
 export const createResume = asyncHandler(async (req, res) => {
@@ -89,6 +89,67 @@ export const updateResume = asyncHandler(async (req, res) => {
   );
 });
 
+// PATCH /resumes/:id/title
+export const updateResumeTitle = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { id } = req.params;
+  const { title } = req.body;
+
+  if (!title?.trim()) {
+    throw new ApiError(400, 'Title is required');
+  }
+
+  const resume = await Resume.findOneAndUpdate(
+    { _id: id, userId },
+    { title: title.trim() },
+    { new: true }
+  );
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found');
+  }
+
+  return new ApiResponse(200, { resume }, 'Title updated').send(res);
+});
+
+// PATCH /resumes/:id/visibility ---> Upload Resume (PDF → AI)
+export const toggleResumeVisibility = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { id } = req.params;
+
+  const resume = await Resume.findOneAndUpdate(
+    { _id: id, userId },
+    [{ $set: { isPublic: { $not: '$isPublic' } } }],
+    { new: true }
+  );
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found');
+  }
+
+  return new ApiResponse(200, { resume }, 'Visibility updated').send(res);
+});
+
+// POST /resumes/import
+export const importResume = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  const { title } = req.body;
+  const file = req.file;
+
+  // 1️⃣ Parse PDF
+  // 2️⃣ Extract text
+  // 3️⃣ AI structuring
+  // 4️⃣ Save resume
+
+  const resume = await Resume.create({
+    userId,
+    title,
+    source: 'pdf',
+  });
+
+  return new ApiResponse(201, { resume }, 'Resume imported').send(res);
+});
+
 export const getResumeById = asyncHandler(async (req, res) => {
   const userId = req.userId;
   const { resumeId } = req.params;
@@ -128,7 +189,7 @@ export const getPublicResumeById = asyncHandler(async (req, res) => {
 
   // 2️⃣ Fetch only public resume
   const resume = await Resume.findOne(
-    { _id: resumeId, public: true },
+    { _id: resumeId, isPublic: true },
     { __v: 0, createdAt: 0, updatedAt: 0 }
   );
 
@@ -143,7 +204,6 @@ export const getPublicResumeById = asyncHandler(async (req, res) => {
     'Public resume fetched successfully'
   ).send(res);
 });
-
 
 export const deleteResume = asyncHandler(async (req, res) => {
   const userId = req.userId;
