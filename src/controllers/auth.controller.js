@@ -8,7 +8,7 @@ import { generateToken } from "../utils/generateToken.js";
 import { validateSignUpData } from "../utils/validation.js";
 import bcrypt from 'bcryptjs';
 
-export const registerUser = asyncHandler(async (req, res) => {
+export const signupUser = asyncHandler(async (req, res) => {
   // 1️⃣ Validate request body
   // validateSignUpData(req);
 
